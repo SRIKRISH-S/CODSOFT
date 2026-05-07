@@ -1,0 +1,45 @@
+2026-05-04 19:36:48,056 - INFO - ChatBot initialized successfully.
+2026-05-04 19:37:05,080 - INFO - User: Hello
+2026-05-04 19:37:05,081 - INFO - Bot: Hi there! What's on your mind?
+2026-05-04 19:37:11,454 - INFO - User: My name is Alice
+2026-05-04 19:37:11,455 - INFO - Memory updated: user_name = Alice
+2026-05-04 19:37:11,455 - INFO - Bot (Skill): Nice to meet you, Alice! I'll remember that.
+2026-05-04 19:37:11,457 - INFO - User: what is my name
+2026-05-04 19:37:11,457 - INFO - Bot (Skill): Your name is Alice, if I remember correctly.
+2026-05-04 19:37:11,458 - INFO - User: calculate 12 * 4
+2026-05-04 19:37:11,459 - INFO - Bot (Skill): The result is 48.
+2026-05-04 19:37:11,460 - INFO - User: bye
+2026-05-04 19:37:11,462 - INFO - Bot: Goodbye! Have a great day!
+2026-05-04 19:37:59,046 - INFO - ChatBot initialized successfully.
+2026-05-04 19:38:12,071 - INFO - User: help
+2026-05-04 19:38:12,072 - INFO - Bot: I can answer questions, perform basic calculations (e.g. 'calculate 5+5'), tell you the time, crack a joke, or just chat!
+2026-05-04 19:38:20,861 - INFO - User: calculate 6+5
+2026-05-04 19:38:20,862 - INFO - Bot (Skill): The result is 11.
+2026-05-04 19:38:27,825 - INFO - User: calculate9//10
+2026-05-04 19:38:27,826 - INFO - Bot (Skill): The result is 0.
+2026-05-04 19:38:39,682 - INFO - User: calculate 6*6777
+2026-05-04 19:38:39,682 - INFO - Bot (Skill): The result is 40662.
+2026-05-04 19:38:46,992 - INFO - User: time
+2026-05-04 19:38:46,992 - INFO - Bot (Skill): The current time is 07:38 PM.
+2026-05-04 19:38:49,055 - INFO - User: ti
+2026-05-04 19:38:49,056 - INFO - Bot: I'm sorry, I didn't quite catch that. Could you rephrase?
+2026-05-04 19:38:54,536 - INFO - User: joke
+2026-05-04 19:38:54,537 - INFO - Bot: Why did the programmer quit his job? Because he didn't get arrays.
+2026-05-04 19:38:57,737 - INFO - User: joke
+2026-05-04 19:38:57,738 - INFO - Bot: Why do Java programmers have to wear glasses? Because they don't C#.
+2026-05-04 19:39:00,545 - INFO - User: joke
+2026-05-04 19:39:00,546 - INFO - Bot: There are 10 types of people in the world: those who understand binary, and those who don't.
+2026-05-04 19:39:07,629 - INFO - User: just chat
+2026-05-04 19:39:07,630 - INFO - Bot: I'm sorry, I didn't quite catch that. Could you rephrase?
+2026-05-04 19:39:09,968 - INFO - User: chat
+2026-05-04 19:39:09,969 - INFO - Bot: I'm sorry, I didn't quite catch that. Could you rephrase?
+2026-05-04 19:39:11,415 - INFO - User: hi
+2026-05-04 19:39:11,416 - INFO - Bot: Hello! How can I help you today?
+2026-05-04 19:39:15,738 - INFO - User: i am krish
+2026-05-04 19:39:15,739 - INFO - Bot: I'm sorry, I didn't quite catch that. Could you rephrase?
+2026-05-04 19:39:20,016 - INFO - User: fine
+2026-05-04 19:39:20,016 - INFO - Bot: I'm sorry, I didn't quite catch that. Could you rephrase?
+2026-05-04 19:39:23,912 - INFO - User: help me
+2026-05-04 19:39:23,913 - INFO - Bot: I can answer questions, perform basic calculations (e.g. 'calculate 5+5'), tell you the time, crack a joke, or just chat!
+2026-05-04 19:39:29,639 - INFO - User: bye
+2026-05-04 19:39:29,640 - INFO - Bot: Bye! Feel free to return if you need more help.

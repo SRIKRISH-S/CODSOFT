@@ -1,0 +1,95 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": [
+        "hi",
+        "hello",
+        "hey",
+        "good morning",
+        "good afternoon",
+        "good evening",
+        "what's up",
+        "howdy"
+      ],
+      "responses": [
+        "Hello! How can I help you today?",
+        "Hi there! What's on your mind?",
+        "Greetings! How may I assist you?"
+      ]
+    },
+    {
+      "tag": "farewell",
+      "patterns": [
+        "bye",
+        "goodbye",
+        "see you",
+        "exit",
+        "quit",
+        "later",
+        "cya"
+      ],
+      "responses": [
+        "Goodbye! Have a great day!",
+        "See you later! Stay safe.",
+        "Bye! Feel free to return if you need more help."
+      ]
+    },
+    {
+      "tag": "identity",
+      "patterns": [
+        "who are you",
+        "what is your name",
+        "are you a robot",
+        "what are you"
+      ],
+      "responses": [
+        "I'm a professional AI assistant designed to help you.",
+        "I am a virtual assistant, here to answer your questions and perform tasks.",
+        "I'm your friendly neighborhood chatbot!"
+      ]
+    },
+    {
+      "tag": "status",
+      "patterns": [
+        "how are you",
+        "how are things",
+        "are you doing well",
+        "how do you do"
+      ],
+      "responses": [
+        "I'm operating at 100% efficiency. Thanks for asking!",
+        "Doing great! Ready to help.",
+        "I'm doing well, thank you! How are you?"
+      ]
+    },
+    {
+      "tag": "help",
+      "patterns": [
+        "help",
+        "what can you do",
+        "assist me",
+        "i need help"
+      ],
+      "responses": [
+        "I can answer questions, perform basic calculations (e.g. 'calculate 5+5'), tell you the time, crack a joke, or just chat!",
+        "Feel free to ask me for a joke, the current time, a math calculation, or just converse with me."
+      ]
+    },
+    {
+      "tag": "joke",
+      "patterns": [
+        "tell me a joke",
+        "make me laugh",
+        "say something funny",
+        "know any jokes"
+      ],
+      "responses": [
+        "Why don't scientists trust atoms? Because they make up everything!",
+        "Why did the programmer quit his job? Because he didn't get arrays.",
+        "There are 10 types of people in the world: those who understand binary, and those who don't.",
+        "Why do Java programmers have to wear glasses? Because they don't C#."
+      ]
+    }
+  ]
+}

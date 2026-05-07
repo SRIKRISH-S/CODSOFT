@@ -1,0 +1,8 @@
+streamlit>=1.32.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+plotly>=5.18.0
+# Optional but highly recommended for face recognition:
+# face-recognition>=1.3.0  (requires cmake + dlib, install separately)
+# dlib>=19.24.0             (pip install dlib or use conda)
