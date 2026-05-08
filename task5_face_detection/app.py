@@ -1,534 +1,360 @@
 """
-Task 5 — Face Detection & Recognition UI (Streamlit)
-CODSOFT AI Internship | Author: SRIKRISH-S
+Task 5 — Face Detection & Recognition  |  CODSOFT AI Internship
+Author: SRIKRISH-S | github.com/SRIKRISH-S/CODSOFT
 """
 
 import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
-import io
 import time
-from pathlib import Path
-from face_engine import FaceDetector, FaceRecognizer, FaceProcessor, FaceDetection
+from face_engine import FaceDetector, FaceRecognizer, FaceProcessor
 
-# ── Page Config ───────────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="FaceVision AI — Detection & Recognition",
-    page_icon="👁️",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+st.set_page_config(page_title="FaceVision · Detection AI", page_icon="👁️",
+                   layout="wide", initial_sidebar_state="expanded")
 
-# ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
 
-html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+*, html, body { font-family: 'IBM Plex Sans', sans-serif; }
+.stApp { background: #f8fffe; color: #0d1117; }
 
-.stApp {
-    background: linear-gradient(135deg, #030712 0%, #0c0c1a 50%, #030712 100%);
-    color: #e2e8f0;
-}
-
-.hero-banner {
-    background: linear-gradient(135deg, #059669 0%, #0891b2 50%, #6366f1 100%);
-    border-radius: 20px;
-    padding: 2.5rem 2rem;
-    text-align: center;
-    margin-bottom: 2rem;
-    box-shadow: 0 20px 60px rgba(5, 150, 105, 0.4);
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-title { font-size: 2.8rem; font-weight: 800; color: white; margin: 0; }
-.hero-subtitle { font-size: 1rem; color: rgba(255,255,255,0.85); margin-top: 0.5rem; }
-
-.face-card {
-    background: rgba(5, 150, 105, 0.08);
-    border: 1px solid rgba(5, 150, 105, 0.3);
-    border-radius: 16px;
-    padding: 1.2rem;
-    margin: 0.5rem 0;
-    transition: all 0.3s ease;
-}
-
-.face-card:hover {
-    border-color: rgba(5, 150, 105, 0.6);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(5, 150, 105, 0.2);
-}
-
-.badge-known {
-    background: linear-gradient(135deg, #059669, #0891b2);
-    color: white; border-radius: 8px; padding: 3px 12px;
-    font-size: 0.75rem; font-weight: 700;
-}
-
-.badge-unknown {
-    background: linear-gradient(135deg, #dc2626, #f59e0b);
-    color: white; border-radius: 8px; padding: 3px 12px;
-    font-size: 0.75rem; font-weight: 700;
-}
-
-.metric-card {
-    background: rgba(5, 150, 105, 0.1);
-    border: 1px solid rgba(5, 150, 105, 0.3);
-    border-radius: 12px;
-    padding: 1rem;
-    text-align: center;
-}
-
-.section-header {
-    font-size: 1.4rem; font-weight: 700; color: #34d399;
-    border-bottom: 2px solid rgba(5, 150, 105, 0.3);
-    padding-bottom: 0.5rem; margin-bottom: 1rem;
-}
-
-.info-box {
-    background: rgba(8, 145, 178, 0.1);
-    border: 1px solid rgba(8, 145, 178, 0.3);
-    border-radius: 12px;
-    padding: 1rem 1.2rem;
-    margin: 0.5rem 0;
-}
-
-[data-testid="stSidebar"] {
-    background: rgba(3, 7, 18, 0.98) !important;
-    border-right: 1px solid rgba(5, 150, 105, 0.2);
-}
-
-.stButton > button {
-    background: linear-gradient(135deg, #059669, #0891b2) !important;
-    color: white !important; border: none !important;
-    border-radius: 10px !important; font-weight: 600 !important;
-    transition: all 0.3s ease !important;
-}
-
-.stButton > button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.5) !important;
-}
+[data-testid="stSidebar"] { background: #f0f9f8 !important; border-right: 1px solid #cef2ee; }
+[data-testid="stSidebar"] label { color: #1a3a38 !important; }
 
 #MainMenu, footer, header { visibility: hidden; }
 
-.stProgress > div > div { background: linear-gradient(135deg, #059669, #0891b2) !important; }
+.page-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 2.2rem; font-weight: 600; color: #0d1117;
+    letter-spacing: -0.5px;
+}
+.page-badge {
+    display: inline-block; background: #0d9488; color: white;
+    border-radius: 6px; padding: 3px 12px; font-size: 0.72rem;
+    font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    font-family: 'IBM Plex Mono', monospace; margin-left: 0.5rem;
+}
+
+.terminal-card {
+    background: #0d1117; color: #7ee787; border-radius: 12px;
+    padding: 1.2rem; margin: 0.6rem 0; font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem; border: 1px solid #21262d;
+}
+.t-label { color: #58a6ff; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; }
+.t-val   { color: #7ee787; font-weight: 600; font-size: 0.9rem; }
+.t-dim   { color: #3d444d; }
+
+.face-result {
+    border-radius: 12px; padding: 1rem 1.2rem; margin: 0.5rem 0;
+    border-left: 4px solid;
+}
+.face-known   { background: rgba(13,148,136,0.06); border-color: #0d9488; }
+.face-unknown { background: rgba(220,38,38,0.05);  border-color: #dc2626; }
+
+.name-badge {
+    display: inline-block; border-radius: 6px; padding: 3px 12px;
+    font-size: 0.78rem; font-weight: 600; font-family: 'IBM Plex Mono', monospace;
+}
+.badge-known   { background: rgba(13,148,136,0.15); color: #0d9488; border: 1px solid rgba(13,148,136,0.3); }
+.badge-unknown { background: rgba(220,38,38,0.1); color: #dc2626; border: 1px solid rgba(220,38,38,0.2); }
+
+.kpi-row { display: flex; gap: 0.8rem; margin: 1rem 0; flex-wrap: wrap; }
+.kpi-item {
+    flex: 1; min-width: 80px;
+    background: #f0f9f8; border: 1px solid #cef2ee;
+    border-radius: 10px; padding: 0.8rem; text-align: center;
+}
+.kpi-num { font-size: 1.4rem; font-weight: 700; color: #0d9488; font-family: 'IBM Plex Mono', monospace; }
+.kpi-lbl { font-size: 0.68rem; color: #5e7e7b; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.step-block {
+    border-left: 3px solid #0d9488; padding: 0.7rem 1rem;
+    margin: 0.5rem 0; background: #f0f9f8; border-radius: 0 10px 10px 0;
+}
+.step-title { font-weight: 700; color: #0d1117; font-size: 0.88rem; }
+.step-desc  { color: #5e7e7b; font-size: 0.8rem; margin-top: 2px; }
+
+.stButton > button {
+    background: #0d9488 !important; color: white !important;
+    border: none !important; border-radius: 8px !important;
+    font-weight: 600 !important; font-family: 'IBM Plex Sans', sans-serif !important;
+    transition: all 0.2s !important;
+}
+.stButton > button:hover { background: #0f766e !important;
+    box-shadow: 0 4px 16px rgba(13,148,136,0.35) !important;
+    transform: translateY(-1px) !important; }
+
+.upload-zone {
+    border: 2px dashed #cef2ee; border-radius: 14px;
+    padding: 3rem; text-align: center; color: #5e7e7b; background: #f0f9f8;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# ── Load Resources ────────────────────────────────────────────────────────────
+# ── Load engine ───────────────────────────────────────────────────────────────
 @st.cache_resource
-def load_engine(method="haar", scale=1.1, neighbors=5, min_size=30, confidence=0.5, tolerance=0.5):
-    detector = FaceDetector(method, scale, neighbors, min_size, confidence)
-    recognizer = FaceRecognizer(tolerance)
-    processor = FaceProcessor(detector, recognizer)
-    return detector, recognizer, processor
+def load_engine(method, scale, neighbors, min_sz, dnn_conf, tol):
+    det = FaceDetector(method, scale, neighbors, min_sz, dnn_conf)
+    rec_eng = FaceRecognizer(tol)
+    return FaceProcessor(det, rec_eng), rec_eng
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 👁️ FaceVision AI")
-    st.markdown("---")
-    
-    page = st.radio(
-        "Navigation",
-        ["🏠 Home", "🖼️ Image Detection", "📹 Webcam Live", "👤 Register Face", "📂 Face Database"],
-        label_visibility="collapsed",
-    )
-    
-    st.markdown("---")
-    st.markdown("### ⚙️ Detection Settings")
-    
-    detect_method = st.selectbox("Detection Method", ["haar", "dnn"], 
-                                  format_func=lambda x: "Haar Cascade (Fast)" if x == "haar" else "DNN (Accurate)")
-    scale_factor = st.slider("Scale Factor", 1.05, 1.5, 1.1, 0.05)
-    min_neighbors = st.slider("Min Neighbors", 1, 15, 5)
-    min_face_size = st.slider("Min Face Size (px)", 10, 100, 30)
-    
-    st.markdown("---")
-    st.markdown("### 🎯 Recognition Settings")
-    tolerance = st.slider("Recognition Tolerance", 0.3, 0.8, 0.5, 0.05,
-                          help="Lower = stricter matching")
-    do_recognize = st.toggle("Enable Recognition", value=True)
-    
-    st.markdown("---")
+    st.markdown("### 👁️ FaceVision")
+    st.markdown('<span style="font-family:monospace;font-size:0.75rem;color:#5e7e7b;">Haar · OpenCV DNN · dlib</span>',
+                unsafe_allow_html=True)
+    st.divider()
+
+    page = st.radio("", ["🏠 Overview", "🖼️ Image Detection", "📹 Webcam", "👤 Register", "📂 Database"],
+                    label_visibility="collapsed")
+    st.divider()
+
+    st.markdown("**Detection**")
+    method    = st.selectbox("Method", ["haar","dnn"],
+                              format_func=lambda x: "Haar Cascade (Fast)" if x=="haar" else "DNN Res10 SSD")
+    scale     = st.slider("Scale Factor", 1.05, 1.5, 1.1, 0.05)
+    neighbors = st.slider("Min Neighbours", 1, 15, 5)
+    min_size  = st.slider("Min Face (px)", 10, 100, 30)
+    st.divider()
+    st.markdown("**Recognition**")
+    tolerance   = st.slider("Tolerance", 0.3, 0.8, 0.5, 0.05)
+    do_recognize = st.toggle("Enable Recognition", True)
+    st.divider()
+
+    st.markdown('<div style="text-align:center;color:#a8d5d1;font-size:0.75rem;">CODSOFT AI · Task 5<br>'
+                '<a href="https://github.com/SRIKRISH-S/CODSOFT" style="color:#0d9488;">github.com/SRIKRISH-S</a></div>',
+                unsafe_allow_html=True)
+
+proc, rec_eng = load_engine(method, scale, neighbors, min_size, 0.5, tolerance)
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def pil2cv(img: Image.Image) -> np.ndarray:
+    return cv2.cvtColor(np.array(img.convert("RGB")), cv2.COLOR_RGB2BGR)
+
+def cv2pil(arr: np.ndarray) -> Image.Image:
+    return Image.fromarray(cv2.cvtColor(arr, cv2.COLOR_BGR2RGB))
+
+def render_detections(detections, elapsed_ms):
     st.markdown(
-        '<div style="color: #059669; font-size: 0.8rem; text-align: center;">'
-        "CODSOFT AI Internship<br>Task 5 — Face Detection<br>"
-        '<a href="https://github.com/SRIKRISH-S/CODSOFT" style="color: #34d399;">GitHub: SRIKRISH-S</a>'
-        "</div>",
-        unsafe_allow_html=True,
-    )
+        f'<div class="kpi-row">'
+        f'<div class="kpi-item"><div class="kpi-num">{len(detections)}</div><div class="kpi-lbl">Faces Found</div></div>'
+        f'<div class="kpi-item"><div class="kpi-num">{sum(1 for d in detections if d.name!="Unknown")}</div><div class="kpi-lbl">Recognised</div></div>'
+        f'<div class="kpi-item"><div class="kpi-num">{elapsed_ms:.0f}ms</div><div class="kpi-lbl">Detect Time</div></div>'
+        f'</div>', unsafe_allow_html=True)
 
-# Load engine
-detector, recognizer, processor = load_engine(
-    detect_method, scale_factor, min_neighbors, min_face_size, 0.5, tolerance
-)
-
-# ── Hero ──────────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="hero-banner">
-    <div class="hero-title">👁️ FaceVision AI</div>
-    <div class="hero-subtitle">Real-Time Face Detection & Recognition · Haar Cascades · OpenCV DNN · dlib Face Encodings</div>
-</div>
-""", unsafe_allow_html=True)
-
-# ── Helper ────────────────────────────────────────────────────────────────────
-def pil_to_cv2(pil_img):
-    return cv2.cvtColor(np.array(pil_img.convert("RGB")), cv2.COLOR_RGB2BGR)
-
-def cv2_to_pil(cv2_img):
-    return Image.fromarray(cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB))
-
-def render_detections_table(detections):
-    if not detections:
-        st.info("No faces detected.")
-        return
     for i, det in enumerate(detections):
-        badge = (
-            f'<span class="badge-known">✅ {det.name} ({det.similarity:.0%})</span>'
-            if det.name != "Unknown"
-            else '<span class="badge-unknown">❓ Unknown</span>'
-        )
-        eyes = "👁️ Yes" if det.has_eyes else "—"
-        smile = "😊 Yes" if det.has_smile else "—"
+        known = det.name != "Unknown"
+        cls = "face-known" if known else "face-unknown"
+        badge_cls = "badge-known" if known else "badge-unknown"
+        sim_txt = f" · {det.similarity:.0%}" if known and det.similarity > 0 else ""
+        eyes = " · 👁 Eyes" if det.has_eyes else ""
+        smile = " · 😊 Smile" if det.has_smile else ""
         st.markdown(
-            f"""
-            <div class="face-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                    <div>
-                        <strong style="color:#34d399">Face #{i+1}</strong> &nbsp; {badge}
-                    </div>
-                    <div style="color:#94a3b8; font-size:0.8rem;">
-                        Pos: ({det.x}, {det.y}) &nbsp;|&nbsp; Size: {det.w}×{det.h}px &nbsp;|&nbsp;
-                        Conf: {det.confidence:.0%} &nbsp;|&nbsp; Eyes: {eyes} &nbsp;|&nbsp; Smile: {smile}
-                    </div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            f'<div class="face-result {cls}">'
+            f'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">'
+            f'<div><strong>Face #{i+1}</strong> &nbsp;'
+            f'<span class="name-badge {badge_cls}">{det.name}{sim_txt}</span></div>'
+            f'<div style="font-size:0.78rem;color:#5e7e7b;">'
+            f'Pos ({det.x},{det.y}) · {det.w}×{det.h}px · Conf {det.confidence:.0%}{eyes}{smile}</div>'
+            f'</div></div>', unsafe_allow_html=True)
+
+# ── Page Header ───────────────────────────────────────────────────────────────
+st.markdown('<p class="page-title">FaceVision<span class="page-badge">AI</span></p>', unsafe_allow_html=True)
+st.markdown("---")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PAGE: HOME
-# ─────────────────────────────────────────────────────────────────────────────
-if page == "🏠 Home":
-    col1, col2, col3, col4 = st.columns(4)
-    
-    for col, icon, val, label in [
-        (col1, "🔍", "Haar + DNN", "Detection Methods"),
-        (col2, "🧠", "dlib 128-D", "Face Encodings"),
-        (col3, "👤", f"{len(recognizer.registered_names)}", "Registered Faces"),
-        (col4, "⚡", "Real-Time", "Webcam Support"),
-    ]:
-        col.markdown(
-            f'<div class="metric-card"><div style="font-size:2rem">{icon}</div>'
-            f'<div style="font-size:1.3rem;font-weight:700;color:#34d399">{val}</div>'
-            f'<div style="color:#94a3b8;font-size:0.8rem">{label}</div></div>',
-            unsafe_allow_html=True,
-        )
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    col_l, col_r = st.columns(2)
-    with col_l:
-        st.markdown('<div class="section-header">🧪 How It Works</div>', unsafe_allow_html=True)
-        steps = [
-            ("1. Detection", "Haar Cascade / DNN scans image for face regions using sliding window + feature matching"),
-            ("2. Feature Extraction", "128-dimensional face encoding extracted using dlib's ResNet model"),
-            ("3. Recognition", "Euclidean distance between encodings determines identity (tolerance threshold)"),
-            ("4. Annotation", "Bounding boxes, confidence scores, names, and facial features drawn on output"),
-        ]
-        for title, desc in steps:
+if page == "🏠 Overview":
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**How It Works**")
+        for num, title, desc in [
+            ("01", "Image Input",      "Load image or capture webcam frame"),
+            ("02", "Haar / DNN Scan",  "Sliding window scans for face regions using trained features"),
+            ("03", "ROI Extraction",   "Face bounding boxes cropped and normalised to 128-D"),
+            ("04", "Encoding Match",   "Euclidean distance to known encodings determines identity"),
+        ]:
             st.markdown(
-                f'<div class="info-box"><strong style="color:#34d399">{title}</strong><br>'
-                f'<span style="color:#94a3b8;font-size:0.85rem">{desc}</span></div>',
-                unsafe_allow_html=True,
-            )
-    
-    with col_r:
-        st.markdown('<div class="section-header">📊 Algorithm Comparison</div>', unsafe_allow_html=True)
+                f'<div class="step-block">'
+                f'<div class="step-title"><span style="color:#0d9488;font-family:monospace">[{num}]</span> {title}</div>'
+                f'<div class="step-desc">{desc}</div></div>',
+                unsafe_allow_html=True)
+
+        st.markdown('<div class="kpi-row">'
+                    '<div class="kpi-item"><div class="kpi-num">2</div><div class="kpi-lbl">Detectors</div></div>'
+                    f'<div class="kpi-item"><div class="kpi-num">{len(rec_eng.registered_names)}</div><div class="kpi-lbl">Registered</div></div>'
+                    '<div class="kpi-item"><div class="kpi-num">128D</div><div class="kpi-lbl">Encoding</div></div>'
+                    '<div class="kpi-item"><div class="kpi-num">30fps</div><div class="kpi-lbl">Webcam</div></div>'
+                    '</div>', unsafe_allow_html=True)
+
+    with col2:
         import plotly.graph_objects as go
-        
-        categories = ["Speed", "Accuracy", "Memory", "Robustness", "Occlusion\nHandling"]
-        haar_scores =  [95, 70, 90, 65, 50]
-        dnn_scores  =  [75, 92, 65, 90, 80]
-        
+        cats = ["Speed", "Accuracy", "Memory", "Occlusion", "Robustness"]
         fig = go.Figure()
-        fig.add_trace(go.Scatterpolar(r=haar_scores, theta=categories, fill='toself',
-                                       name='Haar Cascade', line_color='#34d399'))
-        fig.add_trace(go.Scatterpolar(r=dnn_scores, theta=categories, fill='toself',
-                                       name='DNN Detector', line_color='#60a5fa'))
+        fig.add_trace(go.Scatterpolar(r=[95,70,90,50,65], theta=cats, fill="toself",
+                                       name="Haar Cascade", line_color="#0d9488",
+                                       fillcolor="rgba(13,148,136,0.15)"))
+        fig.add_trace(go.Scatterpolar(r=[75,92,65,80,90], theta=cats, fill="toself",
+                                       name="DNN Detector", line_color="#0891b2",
+                                       fillcolor="rgba(8,145,178,0.1)"))
         fig.update_layout(
             polar=dict(
-                radialaxis=dict(visible=True, range=[0, 100],
-                                gridcolor="rgba(52,211,153,0.2)", color="#94a3b8"),
-                angularaxis=dict(gridcolor="rgba(52,211,153,0.2)", color="#e2e8f0"),
+                radialaxis=dict(visible=True, range=[0,100], gridcolor="#cef2ee", color="#5e7e7b"),
+                angularaxis=dict(gridcolor="#cef2ee", color="#0d1117"),
                 bgcolor="rgba(0,0,0,0)",
             ),
-            showlegend=True,
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#e2e8f0"),
-            legend=dict(bgcolor="rgba(0,0,0,0)"),
-            height=350,
+            showlegend=True, plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="#f8fffe", font=dict(color="#0d1117"),
+            legend=dict(bgcolor="rgba(0,0,0,0)"), height=340,
+            margin=dict(l=20,r=20,t=20,b=20),
         )
         st.plotly_chart(fig, use_container_width=True)
-        
-        if recognizer.registered_names:
-            st.markdown('<div class="section-header">👤 Registered Faces</div>', unsafe_allow_html=True)
-            for name in recognizer.registered_names:
-                count = len(recognizer.known_encodings[name])
-                st.markdown(
-                    f'<div class="face-card"><strong style="color:#34d399">{name}</strong>'
-                    f' <span style="color:#94a3b8">— {count} encoding(s)</span></div>',
-                    unsafe_allow_html=True,
-                )
 
-# ─────────────────────────────────────────────────────────────────────────────
-# PAGE: IMAGE DETECTION
+        st.markdown('<div class="terminal-card">'
+                    '<div class="t-label">System Status</div>'
+                    f'<div class="t-val">◉ ONLINE</div>'
+                    f'<div class="t-dim">detector: {method.upper()} CASCADE</div>'
+                    f'<div class="t-dim">recognition: {"ENABLED" if do_recognize else "DISABLED"}</div>'
+                    f'<div class="t-dim">registered: {len(rec_eng.registered_names)} faces</div>'
+                    f'<div class="t-dim">tolerance: {tolerance}</div>'
+                    '</div>', unsafe_allow_html=True)
+
 # ─────────────────────────────────────────────────────────────────────────────
 elif page == "🖼️ Image Detection":
-    st.markdown('<div class="section-header">🖼️ Image Face Detection & Recognition</div>', unsafe_allow_html=True)
-    
-    uploaded = st.file_uploader(
-        "Upload an image (JPG, PNG, WEBP)",
-        type=["jpg", "jpeg", "png", "webp"],
-        help="Upload any photo to detect and recognize faces",
-    )
-    
-    use_sample = st.checkbox("Use sample webcam-style image (generated)")
-    
-    if use_sample or uploaded:
-        if uploaded:
-            pil_img = Image.open(uploaded)
-        else:
-            # Generate a test pattern image
-            blank = np.ones((480, 640, 3), dtype=np.uint8) * 30
-            cv2.putText(blank, "Upload a real image with faces", (80, 240),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (52, 211, 153), 2)
-            pil_img = cv2_to_pil(blank)
-        
-        col_orig, col_result = st.columns(2)
-        
-        with col_orig:
-            st.markdown("**📷 Original Image**")
-            st.image(pil_img, use_container_width=True)
-        
-        with st.spinner("🔍 Running face detection AI..."):
-            cv2_img = pil_to_cv2(pil_img)
-            start = time.time()
-            annotated, detections = processor.process(cv2_img, do_recognize)
-            elapsed = (time.time() - start) * 1000
+    st.markdown("**Upload Image for Face Detection**")
+    uploaded = st.file_uploader("", type=["jpg","jpeg","png","webp","bmp"],
+                                 label_visibility="collapsed")
 
-        with col_result:
-            st.markdown(f"**🎯 Detection Result** — `{elapsed:.1f}ms`")
-            st.image(cv2_to_pil(annotated), use_container_width=True)
-        
-        # Face crops
-        crops = processor.extract_face_crops(cv2_img, detections)
-        
-        st.markdown(f'<div class="section-header">📋 Detection Details — {len(detections)} face(s) found</div>', unsafe_allow_html=True)
-        render_detections_table(detections)
-        
+    if not uploaded:
+        st.markdown('<div class="upload-zone">📤 Drop an image here<br>'
+                    '<span style="font-size:0.8rem">JPG · PNG · WEBP · BMP</span></div>',
+                    unsafe_allow_html=True)
+    else:
+        img = Image.open(uploaded).convert("RGB")
+        c1, c2 = st.columns(2, gap="medium")
+        with c1:
+            st.markdown("**Original**")
+            st.image(img, use_container_width=True)
+        with st.spinner("Detecting faces…"):
+            cv_img = pil2cv(img)
+            t0 = time.perf_counter()
+            annotated, dets = proc.process(cv_img, do_recognize)
+            elapsed = (time.perf_counter() - t0) * 1000
+        with c2:
+            st.markdown(f"**Detected — {len(dets)} face(s)**")
+            st.image(cv2pil(annotated), use_container_width=True)
+
+        render_detections(dets, elapsed)
+
+        crops = proc.extract_face_crops(cv_img, dets)
         if crops:
-            st.markdown('<div class="section-header">✂️ Extracted Face Crops</div>', unsafe_allow_html=True)
+            st.markdown("**Extracted Faces**")
             crop_cols = st.columns(min(len(crops), 6))
-            for i, (crop, det) in enumerate(zip(crops, detections)):
+            for i, (cr, det) in enumerate(zip(crops, dets)):
                 with crop_cols[i % 6]:
-                    label = det.name if det.name != "Unknown" else "❓ Unknown"
-                    st.image(cv2_to_pil(crop), caption=label, use_container_width=True)
+                    st.image(cv2pil(cr), caption=det.name, use_container_width=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PAGE: WEBCAM LIVE
-# ─────────────────────────────────────────────────────────────────────────────
-elif page == "📹 Webcam Live":
-    st.markdown('<div class="section-header">📹 Live Webcam Detection</div>', unsafe_allow_html=True)
-    
-    st.markdown(
-        '<div class="info-box">📸 <strong>Live Detection Mode</strong>: Uses your webcam to detect and recognize faces in real-time. '
-        "Click <strong>Start Camera</strong> to begin.</div>",
-        unsafe_allow_html=True,
-    )
-    
-    col_ctrl, col_info = st.columns([2, 1])
-    with col_ctrl:
-        run = st.toggle("🎥 Start Camera", value=False)
-        frame_placeholder = st.empty()
-    with col_info:
-        stats_placeholder = st.empty()
-    
-    if run:
+elif page == "📹 Webcam":
+    st.markdown("**Live Webcam Detection**")
+    live = st.toggle("▶ Start Camera", False)
+    col_cam, col_stat = st.columns([3, 1])
+    frame_ph = col_cam.empty()
+    stat_ph  = col_stat.empty()
+
+    if live:
         cap = cv2.VideoCapture(0)
         if not cap.isOpened():
-            st.error("❌ Could not open webcam. Make sure a camera is connected and not in use by another app.")
+            st.error("❌ Cannot open webcam.")
         else:
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-            
-            frame_count = 0
-            fps_time = time.time()
-            
-            while run:
+            t0, fc = time.time(), 0
+            while live:
                 ret, frame = cap.read()
-                if not ret:
-                    st.error("Failed to read from camera.")
-                    break
-                
-                frame = cv2.flip(frame, 1)  # Mirror
-                annotated, detections = processor.process(frame, do_recognize)
-                
-                # FPS calculation
-                frame_count += 1
-                elapsed = time.time() - fps_time
-                fps = frame_count / elapsed if elapsed > 0 else 0
-                
-                # FPS overlay
-                cv2.putText(annotated, f"FPS: {fps:.1f}", (10, annotated.shape[0] - 10),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (52, 211, 153), 2)
-                
-                frame_placeholder.image(cv2_to_pil(annotated), use_container_width=True)
-                
-                known = [d for d in detections if d.name != "Unknown"]
-                stats_placeholder.markdown(
-                    f"""
-                    <div class="metric-card">
-                        <div style="font-size:1.5rem;font-weight:700;color:#34d399">{len(detections)}</div>
-                        <div style="color:#94a3b8">Faces Detected</div>
-                        <br>
-                        <div style="font-size:1.2rem;font-weight:700;color:#60a5fa">{len(known)}</div>
-                        <div style="color:#94a3b8">Recognized</div>
-                        <br>
-                        <div style="font-size:1rem;font-weight:600;color:#a78bfa">{fps:.1f} FPS</div>
-                        <div style="color:#94a3b8">Frame Rate</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                
-                time.sleep(0.03)  # ~30 FPS cap
-            
+                if not ret: break
+                frame = cv2.flip(frame, 1)
+                ann, dets = proc.process(frame, do_recognize)
+                fc += 1
+                fps = fc / max(time.time() - t0, 0.001)
+                cv2.putText(ann, f"FPS {fps:.0f}", (10, ann.shape[0]-10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (13,148,136), 2)
+                frame_ph.image(cv2pil(ann), use_container_width=True)
+                stat_ph.markdown(
+                    f'<div class="terminal-card">'
+                    f'<div class="t-label">Live Stats</div>'
+                    f'<div class="t-val">{len(dets)} faces</div>'
+                    f'<div class="t-dim">{sum(1 for d in dets if d.name!="Unknown")} recognised</div>'
+                    f'<div class="t-dim">{fps:.0f} FPS</div>'
+                    f'</div>', unsafe_allow_html=True)
+                time.sleep(0.03)
             cap.release()
     else:
-        frame_placeholder.markdown(
-            '<div style="background:rgba(5,150,105,0.05);border:2px dashed rgba(5,150,105,0.3);'
-            'border-radius:12px;padding:4rem;text-align:center;color:#94a3b8">'
-            '<div style="font-size:4rem">📷</div>'
-            '<div>Toggle the camera switch to start live detection</div>'
-            '</div>',
-            unsafe_allow_html=True,
-        )
+        frame_ph.markdown(
+            '<div class="upload-zone" style="min-height:300px;">'
+            '<div style="font-size:3rem">📷</div><br>Toggle camera to begin</div>',
+            unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PAGE: REGISTER FACE
-# ─────────────────────────────────────────────────────────────────────────────
-elif page == "👤 Register Face":
-    st.markdown('<div class="section-header">👤 Register a New Face</div>', unsafe_allow_html=True)
-    
-    if not recognizer.available:
-        st.warning(
-            "⚠️ The `face_recognition` library is not installed. "
-            "Run: `pip install face-recognition` to enable face registration and recognition."
-        )
-    
-    st.markdown(
-        '<div class="info-box">📸 Upload a clear, front-facing photo to register a person. '
-        "For best results, use well-lit images with a single face visible.</div>",
-        unsafe_allow_html=True,
-    )
-    
-    col1, col2 = st.columns([1, 1])
-    
-    with col1:
-        name = st.text_input("👤 Person's Name", placeholder="e.g. John Doe")
-        uploaded = st.file_uploader("📸 Upload face photo", type=["jpg", "jpeg", "png"])
-        register_btn = st.button("✅ Register Face", use_container_width=True)
-    
-    with col2:
-        if uploaded:
-            pil_img = Image.open(uploaded)
-            st.image(pil_img, caption="Preview", use_container_width=True)
-    
-    if register_btn and name and uploaded:
-        pil_img = Image.open(uploaded)
-        cv2_img = pil_to_cv2(pil_img)
-        
-        with st.spinner("Processing face..."):
-            # First detect
-            detections = detector.detect(cv2_img)
-            
-        if not detections:
-            st.error("❌ No face detected in the image. Please upload a clearer photo.")
-        elif len(detections) > 1:
-            st.warning(f"⚠️ Multiple faces detected ({len(detections)}). Using the largest face.")
-            # Use largest
-            detections = [max(detections, key=lambda d: d.w * d.h)]
-        
-        if detections:
-            if recognizer.available:
-                success = recognizer.register_face(name.strip(), cv2_img)
-                if success:
-                    st.success(f"✅ Successfully registered **{name}**!")
+elif page == "👤 Register":
+    st.markdown("**Register a New Face**")
+    if not rec_eng.available:
+        st.warning("⚠️ Install `face-recognition`: `pip install cmake dlib face-recognition`")
+
+    c1, c2 = st.columns(2)
+    with c1:
+        name = st.text_input("Full Name", placeholder="e.g. Alice Smith")
+        photo = st.file_uploader("Clear front-facing photo", type=["jpg","jpeg","png"])
+        reg_btn = st.button("✅ Register Face", use_container_width=True)
+    with c2:
+        if photo:
+            st.image(Image.open(photo), use_container_width=True, caption="Preview")
+
+    if reg_btn and name and photo:
+        img = Image.open(photo).convert("RGB")
+        cv_img = pil2cv(img)
+        dets = proc.detector.detect(cv_img)
+        if not dets:
+            st.error("❌ No face detected. Try a clearer, well-lit image.")
+        elif len(dets) > 1:
+            st.warning(f"⚠️ {len(dets)} faces detected — using the largest.")
+        if dets:
+            if rec_eng.available:
+                ok = rec_eng.register_face(name.strip(), cv_img)
+                if ok:
+                    st.success(f"✅ **{name}** registered successfully!")
                     st.balloons()
                 else:
-                    st.error("❌ Could not extract face encoding. Try a clearer image.")
+                    st.error("❌ Could not extract encoding. Try a clearer image.")
             else:
-                st.info(
-                    f"🔖 Face detected for **{name}** — but encoding requires `face_recognition` library. "
-                    "Install it to enable recognition."
-                )
+                st.info("Face detected but registration requires `face-recognition` library.")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PAGE: FACE DATABASE
-# ─────────────────────────────────────────────────────────────────────────────
-elif page == "📂 Face Database":
-    st.markdown('<div class="section-header">📂 Registered Face Database</div>', unsafe_allow_html=True)
-    
-    if not recognizer.registered_names:
-        st.markdown(
-            '<div class="info-box" style="text-align:center;padding:3rem;">'
-            '<div style="font-size:3rem">👤</div>'
-            '<div style="color:#94a3b8;margin-top:1rem">No faces registered yet.<br>'
-            'Go to <strong>Register Face</strong> to add people.</div></div>',
-            unsafe_allow_html=True,
-        )
+elif page == "📂 Database":
+    st.markdown("**Registered Face Database**")
+    if not rec_eng.registered_names:
+        st.markdown('<div class="upload-zone" style="padding:3rem;text-align:center;">'
+                    '<div style="font-size:3rem">👤</div><br>'
+                    '<div style="color:#5e7e7b">No faces registered yet.<br>Go to <strong>Register</strong> to add people.</div>'
+                    '</div>', unsafe_allow_html=True)
     else:
-        col1, col2, col3 = st.columns(3)
-        col1.markdown(
-            f'<div class="metric-card"><div style="font-size:2rem">👥</div>'
-            f'<div style="font-size:1.5rem;font-weight:700;color:#34d399">{len(recognizer.registered_names)}</div>'
-            f'<div style="color:#94a3b8">People</div></div>',
-            unsafe_allow_html=True,
-        )
-        col2.markdown(
-            f'<div class="metric-card"><div style="font-size:2rem">🧠</div>'
-            f'<div style="font-size:1.5rem;font-weight:700;color:#34d399">{recognizer.registered_count}</div>'
-            f'<div style="color:#94a3b8">Total Encodings</div></div>',
-            unsafe_allow_html=True,
-        )
-        col3.markdown(
-            f'<div class="metric-card"><div style="font-size:2rem">📐</div>'
-            f'<div style="font-size:1.5rem;font-weight:700;color:#34d399">128-D</div>'
-            f'<div style="color:#94a3b8">Vector Size</div></div>',
-            unsafe_allow_html=True,
-        )
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        for name in recognizer.registered_names:
-            count = len(recognizer.known_encodings.get(name, []))
-            col_info, col_del = st.columns([5, 1])
-            with col_info:
-                st.markdown(
-                    f'<div class="face-card">'
-                    f'<div style="font-size:1.1rem;font-weight:600;color:#34d399">👤 {name}</div>'
-                    f'<div style="color:#94a3b8;font-size:0.85rem">{count} face encoding(s) · 128-dimensional dlib vectors</div>'
-                    f'</div>',
-                    unsafe_allow_html=True,
-                )
-            with col_del:
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("🗑️ Delete", key=f"del_{name}"):
-                    recognizer.delete_face(name)
+        st.markdown(
+            f'<div class="kpi-row">'
+            f'<div class="kpi-item"><div class="kpi-num">{len(rec_eng.registered_names)}</div><div class="kpi-lbl">People</div></div>'
+            f'<div class="kpi-item"><div class="kpi-num">{rec_eng.registered_count}</div><div class="kpi-lbl">Encodings</div></div>'
+            f'<div class="kpi-item"><div class="kpi-num">128D</div><div class="kpi-lbl">Vector Size</div></div>'
+            f'</div>', unsafe_allow_html=True)
+
+        for nm in rec_eng.registered_names:
+            cnt = len(rec_eng.known_encodings.get(nm, []))
+            c1, c2 = st.columns([5, 1])
+            c1.markdown(
+                f'<div class="face-result face-known">'
+                f'<span class="name-badge badge-known">👤 {nm}</span>'
+                f' <span style="color:#5e7e7b;font-size:0.8rem">{cnt} encoding(s)</span></div>',
+                unsafe_allow_html=True)
+            with c2:
+                if st.button("🗑️", key=f"del_{nm}"):
+                    rec_eng.delete_face(nm)
                     st.rerun()

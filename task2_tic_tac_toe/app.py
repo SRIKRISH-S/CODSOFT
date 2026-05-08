@@ -1,426 +1,348 @@
 """
-Task 2 — Tic-Tac-Toe AI (Streamlit)
-CODSOFT AI Internship | Author: SRIKRISH-S
+Task 2 — Tic-Tac-Toe AI  |  CODSOFT AI Internship
+Author: SRIKRISH-S | github.com/SRIKRISH-S/CODSOFT
 """
 
 import streamlit as st
 import time
-from game import Board, AIEngine, GameSession, X, O, EMPTY, SIZE, WINS
+from game import Board, AIEngine, GameSession, X, O, EMPTY
 
-# ── Page Config ───────────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="TacticAI — Tic-Tac-Toe",
-    page_icon="🎮",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+# ─────────────────────────────────────────────────────────────────────────────
+st.set_page_config(page_title="TacticAI · Tic-Tac-Toe", page_icon="♟️",
+                   layout="wide", initial_sidebar_state="expanded")
 
-# ── CSS ───────────────────────────────────────────────────────────────────────
+# ── THEME ─────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Orbitron:wght@700;900&display=swap');
 
-html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+*, html, body { font-family: 'Space Grotesk', sans-serif; box-sizing: border-box; }
 
-.stApp {
-    background: radial-gradient(ellipse at top, #0d0221 0%, #020010 60%, #000000 100%);
-    color: #e2e8f0;
-}
-
-/* ── Hero ── */
-.hero {
-    text-align: center;
-    padding: 2rem 0 1.5rem;
-}
-.hero-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 3.2rem;
-    font-weight: 900;
-    background: linear-gradient(135deg, #a855f7, #6366f1, #38bdf8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin: 0;
-    letter-spacing: 4px;
-    text-shadow: none;
-}
-.hero-sub { color: #94a3b8; font-size: 1rem; margin-top: 0.4rem; }
-
-/* ── Status Banner ── */
-.status-banner {
-    border-radius: 14px;
-    padding: 0.9rem 1.4rem;
-    font-size: 1.1rem;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 1rem;
-    letter-spacing: 0.5px;
-}
-.status-ongoing  { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc; }
-.status-x_wins   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.5);  color: #fca5a5; }
-.status-o_wins   { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.5); color: #6ee7b7; }
-.status-draw     { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.5); color: #fcd34d; }
-
-/* ── Board ── */
-.board-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    max-width: 380px;
-    margin: 0 auto;
-}
-.cell {
-    aspect-ratio: 1;
-    border-radius: 16px;
-    border: 2px solid rgba(99,102,241,0.25);
-    background: rgba(255,255,255,0.03);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3.2rem;
-    font-weight: 900;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-height: 100px;
-    backdrop-filter: blur(10px);
-}
-.cell:hover { border-color: rgba(168,85,247,0.7); background: rgba(168,85,247,0.1); transform: scale(1.03); }
-.cell.X { color: #f87171; border-color: rgba(248,113,113,0.5); background: rgba(239,68,68,0.08); }
-.cell.O { color: #34d399; border-color: rgba(52,211,153,0.5); background: rgba(16,185,129,0.08); }
-.cell.winning { border-color: #fbbf24 !important; background: rgba(251,191,36,0.15) !important; animation: pulse-win 0.8s ease-in-out infinite alternate; }
-.cell.empty-avail:hover { border-color: rgba(168,85,247,0.8); }
-@keyframes pulse-win { from { box-shadow: 0 0 15px rgba(251,191,36,0.3); } to { box-shadow: 0 0 30px rgba(251,191,36,0.7); } }
+.stApp { background: #0b0c10; color: #c5c6c7; }
 
 /* ── Sidebar ── */
-[data-testid="stSidebar"] {
-    background: rgba(5,0,20,0.98) !important;
-    border-right: 1px solid rgba(99,102,241,0.2);
+[data-testid="stSidebar"] { background: #0d0e12 !important; border-right: 1px solid #1a1b22; }
+[data-testid="stSidebar"] * { color: #c5c6c7 !important; }
+
+/* ── Hide chrome ── */
+#MainMenu, footer, header { visibility: hidden; }
+
+/* ── Board cell buttons ── */
+div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button {
+    width: 100% !important;
+    aspect-ratio: 1 !important;
+    min-height: 110px !important;
+    font-size: 2.4rem !important;
+    font-weight: 900 !important;
+    font-family: 'Orbitron', sans-serif !important;
+    border-radius: 16px !important;
+    border: 2px solid #1f2030 !important;
+    background: #13141d !important;
+    color: #45a29e !important;
+    transition: all 0.18s ease !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+}
+div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] button:hover {
+    border-color: #66fcf1 !important;
+    background: #1a2535 !important;
+    box-shadow: 0 0 22px rgba(102,252,241,0.3) !important;
+    transform: scale(1.04) !important;
 }
 
-/* ── Buttons ── */
+/* ── Global buttons ── */
 .stButton > button {
-    background: linear-gradient(135deg, #7c3aed, #6366f1) !important;
-    color: white !important; border: none !important;
-    border-radius: 10px !important; font-weight: 600 !important;
+    background: #1f8ef1 !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    padding: 0.55rem 1.2rem !important;
     transition: all 0.2s !important;
 }
-.stButton > button:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(124,58,237,0.5) !important; }
+.stButton > button:hover { background: #1a7ad4 !important; box-shadow: 0 4px 18px rgba(31,142,241,0.45) !important; transform: translateY(-1px) !important; }
 
-/* ── Info Cards ── */
-.info-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(99,102,241,0.2);
-    border-radius: 12px;
-    padding: 0.9rem 1.1rem;
-    margin: 0.4rem 0;
-}
-.stat-row { display: flex; justify-content: space-between; color: #94a3b8; font-size: 0.85rem; padding: 3px 0; }
-.stat-val { color: #a5b4fc; font-weight: 600; }
-
-/* ── Move History ── */
-.move-item {
-    padding: 6px 12px;
-    border-radius: 8px;
-    margin: 3px 0;
-    font-size: 0.78rem;
-    border-left: 3px solid;
-}
-.move-x { background: rgba(239,68,68,0.08); border-color: #f87171; color: #fca5a5; }
-.move-o { background: rgba(16,185,129,0.08); border-color: #34d399; color: #6ee7b7; }
-
-.metric-mini {
-    background: rgba(99,102,241,0.08);
-    border: 1px solid rgba(99,102,241,0.2);
-    border-radius: 10px;
-    padding: 0.7rem;
+/* ── Custom components ── */
+.page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.6rem; font-weight: 900;
     text-align: center;
+    background: linear-gradient(90deg, #66fcf1, #1f8ef1, #c3073f);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    letter-spacing: 3px; margin-bottom: 0;
 }
+.page-sub { text-align: center; color: #4e535a; font-size: 0.85rem; margin-bottom: 1.5rem; letter-spacing: 1px; }
 
-#MainMenu, footer, header { visibility: hidden; }
+.status-box {
+    border-radius: 12px; padding: 0.8rem 1.2rem;
+    font-weight: 700; font-size: 1.05rem;
+    text-align: center; margin-bottom: 1.2rem;
+    border: 1px solid;
+}
+.s-ongoing { background: rgba(31,142,241,0.1); border-color: rgba(31,142,241,0.35); color: #1f8ef1; }
+.s-xwins   { background: rgba(195,7,63,0.1);   border-color: rgba(195,7,63,0.4);   color: #c3073f; }
+.s-owins   { background: rgba(102,252,241,0.1); border-color: rgba(102,252,241,0.4); color: #66fcf1; }
+.s-draw    { background: rgba(255,189,0,0.08);  border-color: rgba(255,189,0,0.35); color: #ffbd00; }
+
+.card {
+    background: #13141d; border: 1px solid #1c1e2a;
+    border-radius: 14px; padding: 1.1rem 1.3rem; margin: 0.5rem 0;
+}
+.row { display: flex; justify-content: space-between; align-items: center;
+       padding: 5px 0; border-bottom: 1px solid #1c1e2a; font-size: 0.84rem; }
+.row:last-child { border-bottom: none; }
+.lbl { color: #4e535a; }
+.val { color: #66fcf1; font-weight: 600; }
+
+.score-chip {
+    text-align: center; background: #13141d;
+    border: 1px solid #1c1e2a; border-radius: 10px; padding: 0.6rem;
+}
+.chip-icon { font-size: 1.4rem; }
+.chip-num  { font-size: 1.5rem; font-weight: 800; }
+.chip-lbl  { font-size: 0.65rem; color: #4e535a; letter-spacing: 1px; text-transform: uppercase; }
+
+.hist-item {
+    font-size: 0.78rem; padding: 5px 10px;
+    border-radius: 7px; margin: 3px 0; border-left: 3px solid;
+}
+.hist-x { background: rgba(195,7,63,0.08); border-color: #c3073f; color: #e07; }
+.hist-o { background: rgba(102,252,241,0.06); border-color: #66fcf1; color: #66fcf1; }
+
+.cell-display {
+    border-radius: 16px; border: 2px solid;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 110px; font-size: 2.6rem; font-weight: 900;
+    font-family: 'Orbitron', sans-serif;
+}
+.cell-x { color: #c3073f; border-color: rgba(195,7,63,0.4); background: rgba(195,7,63,0.07); }
+.cell-o { color: #66fcf1; border-color: rgba(102,252,241,0.4); background: rgba(102,252,241,0.06); }
+.cell-win { border-color: #ffbd00 !important; background: rgba(255,189,0,0.1) !important;
+            box-shadow: 0 0 20px rgba(255,189,0,0.25); }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Session State Init ────────────────────────────────────────────────────────
-def init_state():
-    if "game" not in st.session_state:
-        st.session_state.game = GameSession()
-    if "ai" not in st.session_state:
-        st.session_state.ai = AIEngine(O, "hard")
-    if "scores" not in st.session_state:
-        st.session_state.scores = {"X": 0, "O": 0, "Draw": 0}
-    if "last_ai_stats" not in st.session_state:
-        st.session_state.last_ai_stats = {}
-    if "game_count" not in st.session_state:
-        st.session_state.game_count = 0
-    if "total_nodes" not in st.session_state:
-        st.session_state.total_nodes = 0
+# ── Session Init ──────────────────────────────────────────────────────────────
+def _init():
+    defaults = {
+        "game": GameSession(),
+        "ai": AIEngine(O, "hard"),
+        "scores": {"X": 0, "O": 0, "Draw": 0},
+        "ai_stats": {},
+        "total_nodes": 0,
+        "game_count": 0,
+        "celebrated": False,
+    }
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
 
-init_state()
-
+_init()
 game: GameSession = st.session_state.game
 ai:   AIEngine    = st.session_state.ai
 
-
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🎮 TacticAI Settings")
-    st.markdown("---")
+    st.markdown("### ♟️ TacticAI")
+    st.caption("Minimax · Alpha-Beta · Unbeatable")
+    st.divider()
 
-    mode = st.selectbox(
-        "Game Mode",
-        ["hvai", "hvh", "aivai"],
-        format_func=lambda x: {
-            "hvai":  "👤 Human vs 🤖 AI",
-            "hvh":   "👤 Human vs 👤 Human",
-            "aivai": "🤖 AI vs 🤖 AI",
-        }[x],
-    )
-    
+    mode = st.selectbox("Game Mode", ["hvai", "hvh", "aivai"],
+        format_func=lambda x: {"hvai":"👤 Human vs 🤖 AI","hvh":"👤 vs 👤 Human","aivai":"🤖 AI vs 🤖 AI"}[x])
+
     if mode == "hvai":
         human_sym = st.radio("You play as", [X, O], horizontal=True)
         ai_sym = O if human_sym == X else X
     else:
-        human_sym = X
-        ai_sym    = O
+        human_sym, ai_sym = X, O
 
-    difficulty = st.selectbox(
-        "AI Difficulty",
-        ["easy", "medium", "hard"],
-        index=2,
-        format_func=lambda x: {
-            "easy":   "😊 Easy (Random)",
-            "medium": "🤔 Medium (Mixed)",
-            "hard":   "💀 Hard (Unbeatable Minimax)",
-        }[x],
-        disabled=(mode == "hvh"),
-    )
+    difficulty = st.select_slider("AI Difficulty", ["easy","medium","hard"],
+        value="hard", disabled=(mode=="hvh"))
+    diff_label = {"easy":"😊 Easy — Random","medium":"🤔 Medium — Mixed","hard":"💀 Hard — Unbeatable"}[difficulty]
+    st.caption(diff_label)
 
-    st.markdown("---")
-    st.markdown("### 📊 Scoreboard")
-    col_x, col_d, col_o = st.columns(3)
-    col_x.markdown(
-        f'<div class="metric-mini"><div style="font-size:1.3rem;color:#f87171">✗</div>'
-        f'<div style="font-size:1.4rem;font-weight:700;color:#fca5a5">{st.session_state.scores["X"]}</div>'
-        f'<div style="font-size:0.7rem;color:#94a3b8">X Wins</div></div>',
-        unsafe_allow_html=True,
-    )
-    col_d.markdown(
-        f'<div class="metric-mini"><div style="font-size:1.3rem;color:#fbbf24">═</div>'
-        f'<div style="font-size:1.4rem;font-weight:700;color:#fcd34d">{st.session_state.scores["Draw"]}</div>'
-        f'<div style="font-size:0.7rem;color:#94a3b8">Draws</div></div>',
-        unsafe_allow_html=True,
-    )
-    col_o.markdown(
-        f'<div class="metric-mini"><div style="font-size:1.3rem;color:#34d399">○</div>'
-        f'<div style="font-size:1.4rem;font-weight:700;color:#6ee7b7">{st.session_state.scores["O"]}</div>'
-        f'<div style="font-size:0.7rem;color:#94a3b8">O Wins</div></div>',
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("---")
-
-    # Reconfigure AI if settings changed
+    # Apply setting changes
     if ai.difficulty != difficulty or ai.ai_player != ai_sym:
         st.session_state.ai = AIEngine(ai_sym, difficulty)
         ai = st.session_state.ai
-
     if game.mode != mode or game.ai_player != ai_sym:
-        game.mode = mode
-        game.ai_player = ai_sym
+        game.mode, game.ai_player = mode, ai_sym
         game.reset()
+        st.session_state.celebrated = False
 
-    new_game_btn = st.button("🔄 New Game", use_container_width=True)
-    if new_game_btn:
+    st.divider()
+    st.markdown("**📊 Scoreboard**")
+    c1, c2, c3 = st.columns(3)
+    for col, icon, key, color in [(c1,"✗","X","#c3073f"),(c2,"═","Draw","#ffbd00"),(c3,"○","O","#66fcf1")]:
+        col.markdown(
+            f'<div class="score-chip"><div class="chip-icon" style="color:{color}">{icon}</div>'
+            f'<div class="chip-num" style="color:{color}">{st.session_state.scores[key]}</div>'
+            f'<div class="chip-lbl">{key}</div></div>', unsafe_allow_html=True)
+
+    st.divider()
+    if st.button("🔄 New Game", use_container_width=True):
         game.reset()
-        st.session_state.last_ai_stats = {}
+        st.session_state.ai_stats = {}
+        st.session_state.celebrated = False
         st.rerun()
 
-    st.markdown("---")
-    st.markdown(
-        '<div style="color:#6366f1;font-size:0.78rem;text-align:center;">'
-        "CODSOFT AI Internship<br>Task 2 — Tic-Tac-Toe AI<br>"
-        '<a href="https://github.com/SRIKRISH-S/CODSOFT" style="color:#a5b4fc;">GitHub: SRIKRISH-S</a>'
-        "</div>",
-        unsafe_allow_html=True,
-    )
+    st.divider()
+    st.markdown('<div style="text-align:center;color:#2d3039;font-size:0.75rem;">CODSOFT AI · Task 2<br>'
+                '<a href="https://github.com/SRIKRISH-S/CODSOFT" style="color:#1f8ef1;">github.com/SRIKRISH-S</a></div>',
+                unsafe_allow_html=True)
 
-# ── Hero ──────────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="hero">
-    <div class="hero-title">⬛ TACTIC AI ⬛</div>
-    <div class="hero-sub">Minimax · Alpha-Beta Pruning · Unbeatable Intelligence</div>
-</div>
-""", unsafe_allow_html=True)
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def update_scores():
+    s = game.status
+    if s == "x_wins":   st.session_state.scores["X"] += 1; st.session_state.game_count += 1
+    elif s == "o_wins": st.session_state.scores["O"] += 1; st.session_state.game_count += 1
+    elif s == "draw":   st.session_state.scores["Draw"] += 1; st.session_state.game_count += 1
 
-# ── AI Move Trigger ───────────────────────────────────────────────────────────
-def trigger_ai_move():
-    if game.status != "ongoing":
-        return
+def do_ai_move():
+    if game.status != "ongoing": return
     move, stats = ai.best_move(game.board)
     if move >= 0:
         game.make_move(move, stats)
-        st.session_state.last_ai_stats = stats
+        st.session_state.ai_stats = stats
         st.session_state.total_nodes += stats.get("nodes", 0)
         if game.status != "ongoing":
             update_scores()
 
-def update_scores():
-    if game.status == "x_wins":
-        st.session_state.scores["X"] += 1
-        st.session_state.game_count += 1
-    elif game.status == "o_wins":
-        st.session_state.scores["O"] += 1
-        st.session_state.game_count += 1
-    elif game.status == "draw":
-        st.session_state.scores["Draw"] += 1
-        st.session_state.game_count += 1
-
-# AI vs AI: auto-play
+# AI vs AI auto-play
 if game.mode == "aivai" and game.status == "ongoing":
-    time.sleep(0.4)
-    trigger_ai_move()
+    time.sleep(0.35)
+    do_ai_move()
     st.rerun()
 
-# ── Status Banner ─────────────────────────────────────────────────────────────
-STATUS_MSGS = {
-    "ongoing": lambda: f"{'🤖 AI is thinking...' if game.is_ai_turn and mode == 'hvai' else f'🎯 {game.current_player}\'s turn'}",
-    "x_wins":  lambda: "🎉 X Wins! Excellent play!",
-    "o_wins":  lambda: "🤖 O Wins! AI is unbeatable!" if mode == "hvai" and ai_sym == O else "🎉 O Wins!",
-    "draw":    lambda: "🤝 It's a Draw — Perfect game!",
-}
-status_msg = STATUS_MSGS[game.status]()
-st.markdown(
-    f'<div class="status-banner status-{game.status}">{status_msg}</div>',
-    unsafe_allow_html=True,
-)
+# ── Page Header ───────────────────────────────────────────────────────────────
+st.markdown('<p class="page-title">TACTIC AI</p>', unsafe_allow_html=True)
+st.markdown('<p class="page-sub">MINIMAX · ALPHA-BETA PRUNING · GAME THEORY</p>', unsafe_allow_html=True)
 
-# ── Main Layout ───────────────────────────────────────────────────────────────
-col_board, col_info = st.columns([1.2, 1])
+# ── Status ────────────────────────────────────────────────────────────────────
+winning_cells = set(game.winning_line) if game.winning_line else set()
+is_ai_turn = game.mode == "hvai" and game.current_player == ai_sym
+
+if game.status == "ongoing":
+    msg = "🤖 AI is calculating..." if is_ai_turn else f"🎯 Player {'X' if game.current_player == X else 'O'} — your move"
+    cls = "s-ongoing"
+elif game.status == "x_wins":
+    msg = "🏆 X Wins!" + (" — You beat the AI! Impressive!" if mode=="hvai" and human_sym==X else "")
+    cls = "s-xwins"
+elif game.status == "o_wins":
+    msg = "🤖 O Wins! Unbeatable Minimax!" if mode=="hvai" and ai_sym==O else "🏆 O Wins!"
+    cls = "s-owins"
+else:
+    msg = "🤝 Draw — Perfect play from both sides!"
+    cls = "s-draw"
+
+st.markdown(f'<div class="status-box {cls}">{msg}</div>', unsafe_allow_html=True)
+
+# ── Layout ────────────────────────────────────────────────────────────────────
+col_board, col_info = st.columns([1.1, 1], gap="large")
 
 with col_board:
-    # Board evaluation hint
     if game.status == "ongoing":
         eval_txt = ai.evaluate_position(game.board)
-        st.markdown(
-            f'<div style="text-align:center;color:#6366f1;font-size:0.8rem;margin-bottom:8px;">💡 {eval_txt}</div>',
-            unsafe_allow_html=True,
-        )
+        st.caption(f"💡 Position: {eval_txt}")
 
-    # Render board as 3×3 Streamlit button grid
-    winning_cells = set(game.winning_line) if game.winning_line else set()
-    
-    board_rows = [st.columns(3) for _ in range(3)]
-    
-    for idx in range(9):
-        row, col = divmod(idx, 3)
-        cell_val  = game.board.cells[idx]
-        is_win    = idx in winning_cells
-        
-        with board_rows[row][col]:
-            if cell_val == EMPTY and game.status == "ongoing" and not game.is_ai_turn:
-                # Clickable empty cell
-                if st.button(
-                    "·",
-                    key=f"cell_{idx}",
-                    use_container_width=True,
-                    help=f"Play at position {row+1},{col+1}",
-                ):
-                    game.make_move(idx)
-                    if game.status != "ongoing":
-                        update_scores()
-                    elif game.is_ai_turn:
-                        trigger_ai_move()
-                    st.rerun()
-            else:
-                # Display cell value
-                symbol  = {"X": "✗", "O": "○", " ": "·"}[cell_val]
-                color   = {"X": "#f87171", "O": "#34d399", " ": "#334155"}[cell_val]
-                bg      = "rgba(251,191,36,0.12)" if is_win else "rgba(255,255,255,0.02)"
-                border  = "2px solid #fbbf24" if is_win else "1px solid rgba(99,102,241,0.2)"
-                st.markdown(
-                    f'<div style="aspect-ratio:1;border-radius:16px;border:{border};'
-                    f'background:{bg};display:flex;align-items:center;justify-content:center;'
-                    f'font-size:3rem;font-weight:900;color:{color};min-height:95px;'
-                    f'{"animation:pulse-win 0.8s ease-in-out infinite alternate;" if is_win else ""}">'
-                    f'{symbol}</div>',
-                    unsafe_allow_html=True,
-                )
+    # Board — 3 rows × 3 cols of Streamlit buttons + HTML cells
+    for row_idx in range(3):
+        cols = st.columns(3, gap="small")
+        for col_idx in range(3):
+            cell_idx = row_idx * 3 + col_idx
+            val = game.board.cells[cell_idx]
+            is_win = cell_idx in winning_cells
 
-    # Trigger AI move if it's AI's turn (for hvai mode at game start)
-    if game.mode == "hvai" and game.is_ai_turn and game.status == "ongoing":
-        with st.spinner("🤖 AI is calculating..."):
-            trigger_ai_move()
+            with cols[col_idx]:
+                if val == EMPTY and game.status == "ongoing" and not is_ai_turn:
+                    # Clickable button
+                    if st.button("", key=f"b{cell_idx}", use_container_width=True,
+                                 help=f"Row {row_idx+1}, Column {col_idx+1}"):
+                        game.make_move(cell_idx)
+                        if game.status != "ongoing":
+                            update_scores()
+                        elif game.mode == "hvai" and game.current_player == ai_sym:
+                            do_ai_move()
+                        st.rerun()
+                else:
+                    # Static display cell
+                    symbol = {"X": "X", "O": "O", " ": ""}[val]
+                    if val == X:
+                        cls2 = "cell-x" + (" cell-win" if is_win else "")
+                    elif val == O:
+                        cls2 = "cell-o" + (" cell-win" if is_win else "")
+                    else:
+                        cls2 = ""
+                        symbol = "·"
+                    st.markdown(
+                        f'<div class="cell-display {cls2}">{symbol}</div>',
+                        unsafe_allow_html=True)
+
+    # Trigger AI when it's AI turn in hvai mode
+    if game.mode == "hvai" and is_ai_turn and game.status == "ongoing":
+        with st.spinner("AI thinking..."):
+            do_ai_move()
         st.rerun()
+
+    # Win celebration — only once
+    if game.status in ("x_wins", "o_wins") and not st.session_state.celebrated:
+        st.session_state.celebrated = True
+        st.balloons()
 
 with col_info:
     # ── AI Stats ──────────────────────────────────────────────────────────────
-    st.markdown("### 🤖 AI Engine Stats")
-    stats = st.session_state.last_ai_stats
-    
-    st.markdown(
-        f"""
-        <div class="info-card">
-            <div class="stat-row"><span>Algorithm</span><span class="stat-val">Minimax + α-β Pruning</span></div>
-            <div class="stat-row"><span>Difficulty</span><span class="stat-val">{difficulty.capitalize()}</span></div>
-            <div class="stat-row"><span>Nodes Evaluated</span><span class="stat-val">{stats.get('nodes', '—'):,}</span></div>
-            <div class="stat-row"><span>Think Time</span><span class="stat-val">{stats.get('think_ms', '—')} ms</span></div>
-            <div class="stat-row"><span>Best Score</span><span class="stat-val">{stats.get('score', '—')}</span></div>
-            <div class="stat-row"><span>Total Nodes (session)</span><span class="stat-val">{st.session_state.total_nodes:,}</span></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    stats = st.session_state.ai_stats
+    st.markdown("**🤖 AI Engine**")
+    rows = [
+        ("Algorithm", "Minimax + α-β Pruning"),
+        ("Difficulty", difficulty.capitalize()),
+        ("Last Move Nodes", f"{stats.get('nodes', 0):,}"),
+        ("Think Time", f"{stats.get('think_ms', 0):.1f} ms"),
+        ("Minimax Score", str(stats.get('score', '—'))),
+        ("Session Nodes", f"{st.session_state.total_nodes:,}"),
+    ]
+    rows_html = "".join(f'<div class="row"><span class="lbl">{l}</span><span class="val">{v}</span></div>' for l, v in rows)
+    st.markdown(f'<div class="card">{rows_html}</div>', unsafe_allow_html=True)
 
     # ── Game Info ─────────────────────────────────────────────────────────────
-    st.markdown("### 📋 Game Info")
-    st.markdown(
-        f"""
-        <div class="info-card">
-            <div class="stat-row"><span>Mode</span><span class="stat-val">{'Human vs AI' if mode=='hvai' else 'Human vs Human' if mode=='hvh' else 'AI vs AI'}</span></div>
-            <div class="stat-row"><span>Move #</span><span class="stat-val">{game.move_count}</span></div>
-            <div class="stat-row"><span>Games Played</span><span class="stat-val">{st.session_state.game_count}</span></div>
-            <div class="stat-row"><span>Status</span><span class="stat-val">{game.status.replace('_', ' ').title()}</span></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.markdown("**📋 Session**")
+    mode_str = {"hvai":"Human vs AI","hvh":"Human vs Human","aivai":"AI vs AI"}[mode]
+    g_rows = [
+        ("Mode", mode_str),
+        ("Moves Made", str(game.move_count)),
+        ("Games Played", str(st.session_state.game_count)),
+        ("Status", game.status.replace("_"," ").title()),
+    ]
+    g_html = "".join(f'<div class="row"><span class="lbl">{l}</span><span class="val">{v}</span></div>' for l, v in g_rows)
+    st.markdown(f'<div class="card">{g_html}</div>', unsafe_allow_html=True)
 
     # ── Move History ──────────────────────────────────────────────────────────
     if game.history:
-        st.markdown("### 📜 Move History")
-        for move in reversed(game.history[-8:]):
-            ai_note = ""
-            if move.ai_nodes:
-                ai_note = f" · 🤖 {move.ai_nodes:,} nodes"
-            st.markdown(
-                f'<div class="move-{"x" if move.player == X else "o"}">'
-                f'Move {game.history.index(move)+1}: <strong>{move.player}</strong> → '
-                f'Row {move.row+1}, Col {move.col+1}{ai_note}</div>',
-                unsafe_allow_html=True,
-            )
+        st.markdown("**📜 Move Log**")
+        items = []
+        for i, mv in enumerate(reversed(game.history[-9:])):
+            n = len(game.history) - i
+            cls3 = "hist-x" if mv.player == X else "hist-o"
+            ai_tag = f" · {mv.ai_nodes:,} nodes" if mv.ai_nodes else ""
+            items.append(f'<div class="hist-item {cls3}">#{n} {mv.player} → R{mv.row+1}C{mv.col+1}{ai_tag}</div>')
+        st.markdown('<div class="card" style="padding:0.7rem">' + "".join(items) + "</div>",
+                    unsafe_allow_html=True)
 
-    # ── Algorithm Explainer ───────────────────────────────────────────────────
-    with st.expander("🧠 How Minimax Works"):
+    with st.expander("🧠 Minimax Algorithm"):
         st.markdown("""
-**Minimax** explores all possible future game states to find the optimal move.
+**Minimax** builds a complete game tree and picks the move that maximises AI's score  
+while assuming the human always plays optimally.
 
-- **Maximizer (AI)**: Tries to get the highest score (+10 for win)
-- **Minimizer (Human)**: Tries to get the lowest score (-10 for human win)  
-- **Draw**: Score = 0
-- **Depth penalty**: Earlier wins score higher (10-depth)
+| Outcome | Score |
+|---------|-------|
+| AI wins | `+10 − depth` |
+| Human wins | `depth − 10` |
+| Draw | `0` |
 
-**Alpha-Beta Pruning** cuts branches that can't affect the result, making the search ~6× faster.
-
+**Alpha-Beta Pruning** skips branches that are provably worse,  
+cutting ~99% of nodes on the first move.
 ```
-minimax(board, is_max, α, β):
-  if terminal: return score
-  for each move:
-    score = minimax(next_board, !is_max, α, β)
-    if β ≤ α: break  ← pruning!
+if β ≤ α: break   ← prune this branch
 ```
-        """)
-
-# ── Win Celebration ───────────────────────────────────────────────────────────
-if game.status == "x_wins" or game.status == "o_wins":
-    st.balloons()
+""")
